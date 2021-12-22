@@ -70,8 +70,14 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
     log(message, context) {
         message = `${this.app} ${message}`;
         try {
-            Sentry.captureMessage(message, Sentry.Severity.Log);
             super.log(message, context);
+            Sentry.addBreadcrumb({
+                message,
+                level: Sentry.Severity.Log,
+                data: {
+                    context
+                }
+            });
         }
         catch (err) { }
     }
@@ -95,7 +101,13 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
         message = `${this.app} ${message}`;
         try {
             super.debug(message, context);
-            Sentry.captureMessage(message, Sentry.Severity.Debug);
+            Sentry.addBreadcrumb({
+                message,
+                level: Sentry.Severity.Debug,
+                data: {
+                    context
+                }
+            });
         }
         catch (err) { }
     }
@@ -103,7 +115,13 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
         message = `${this.app} ${message}`;
         try {
             super.verbose(message, context);
-            Sentry.captureMessage(message, Sentry.Severity.Info);
+            Sentry.addBreadcrumb({
+                message,
+                level: Sentry.Severity.Log,
+                data: {
+                    context
+                }
+            });
         }
         catch (err) { }
     }

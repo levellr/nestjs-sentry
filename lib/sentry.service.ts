@@ -55,8 +55,14 @@ export class SentryService extends ConsoleLogger implements OnApplicationShutdow
   log(message: string, context?: string) {
     message = `${this.app} ${message}`;
     try {
-      Sentry.captureMessage(message, Sentry.Severity.Log);
       super.log(message, context);
+      Sentry.addBreadcrumb({
+        message,
+        level: Sentry.Severity.Log,
+        data: {
+          context
+        }
+      });
     } catch (err) {}
   }
 
@@ -80,7 +86,13 @@ export class SentryService extends ConsoleLogger implements OnApplicationShutdow
     message = `${this.app} ${message}`;
     try {
       super.debug(message, context);
-      Sentry.captureMessage(message, Sentry.Severity.Debug);
+      Sentry.addBreadcrumb({
+        message,
+        level: Sentry.Severity.Debug,
+        data: {
+          context
+        }
+      });
     } catch (err) {}
   }
 
@@ -88,7 +100,13 @@ export class SentryService extends ConsoleLogger implements OnApplicationShutdow
     message = `${this.app} ${message}`;
     try {
       super.verbose(message, context);
-      Sentry.captureMessage(message, Sentry.Severity.Info);
+      Sentry.addBreadcrumb({
+        message,
+        level: Sentry.Severity.Log,
+        data: {
+          context
+        }
+      });
     } catch (err) {}
   }
 

@@ -38,7 +38,7 @@ let SentryInterceptor = class SentryInterceptor {
         }
     }
     captureHttpException(scope, http, exception) {
-        const data = node_1.Handlers.parseRequest({}, http.getRequest(), {});
+        const data = node_1.Handlers.parseRequest({}, http.getRequest(), this.options);
         scope.setExtra('req', data.request);
         if (data.extra)
             scope.setExtras(data.extra);
