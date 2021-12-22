@@ -40,7 +40,6 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
     constructor(opts) {
         super();
         this.opts = opts;
-        this.app = '@ntegral/nestjs-sentry: ';
         if (!(opts && opts.dsn)) {
             return;
         }
@@ -68,21 +67,21 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
         return SentryService_1.serviceInstance;
     }
     log(message, context) {
-        message = `${this.app} ${message}`;
+        message = `${message}`;
         try {
             super.log(message, context);
             Sentry.addBreadcrumb({
                 message,
                 level: Sentry.Severity.Log,
                 data: {
-                    context
-                }
+                    context,
+                },
             });
         }
         catch (err) { }
     }
     error(message, trace, context) {
-        message = `${this.app} ${message}`;
+        message = `${message}`;
         try {
             super.error(message, trace, context);
             Sentry.captureMessage(message, Sentry.Severity.Error);
@@ -90,7 +89,7 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
         catch (err) { }
     }
     warn(message, context) {
-        message = `${this.app} ${message}`;
+        message = `${message}`;
         try {
             super.warn(message, context);
             Sentry.captureMessage(message, Sentry.Severity.Warning);
@@ -98,29 +97,29 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
         catch (err) { }
     }
     debug(message, context) {
-        message = `${this.app} ${message}`;
+        message = `${message}`;
         try {
             super.debug(message, context);
             Sentry.addBreadcrumb({
                 message,
                 level: Sentry.Severity.Debug,
                 data: {
-                    context
-                }
+                    context,
+                },
             });
         }
         catch (err) { }
     }
     verbose(message, context) {
-        message = `${this.app} ${message}`;
+        message = `${message}`;
         try {
             super.verbose(message, context);
             Sentry.addBreadcrumb({
                 message,
                 level: Sentry.Severity.Log,
                 data: {
-                    context
-                }
+                    context,
+                },
             });
         }
         catch (err) { }

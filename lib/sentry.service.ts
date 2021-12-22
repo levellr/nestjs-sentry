@@ -7,8 +7,10 @@ import { SENTRY_MODULE_OPTIONS } from './sentry.constants';
 import { SentryModuleOptions } from './sentry.interfaces';
 
 @Injectable()
-export class SentryService extends ConsoleLogger implements OnApplicationShutdown {
-  app = '@ntegral/nestjs-sentry: ';
+export class SentryService
+  extends ConsoleLogger
+  implements OnApplicationShutdown
+{
   private static serviceInstance: SentryService;
   constructor(
     @Inject(SENTRY_MODULE_OPTIONS)
@@ -53,21 +55,21 @@ export class SentryService extends ConsoleLogger implements OnApplicationShutdow
   }
 
   log(message: string, context?: string) {
-    message = `${this.app} ${message}`;
+    message = `${message}`;
     try {
       super.log(message, context);
       Sentry.addBreadcrumb({
         message,
         level: Sentry.Severity.Log,
         data: {
-          context
-        }
+          context,
+        },
       });
     } catch (err) {}
   }
 
   error(message: string, trace?: string, context?: string) {
-    message = `${this.app} ${message}`;
+    message = `${message}`;
     try {
       super.error(message, trace, context);
       Sentry.captureMessage(message, Sentry.Severity.Error);
@@ -75,7 +77,7 @@ export class SentryService extends ConsoleLogger implements OnApplicationShutdow
   }
 
   warn(message: string, context?: string) {
-    message = `${this.app} ${message}`;
+    message = `${message}`;
     try {
       super.warn(message, context);
       Sentry.captureMessage(message, Sentry.Severity.Warning);
@@ -83,29 +85,29 @@ export class SentryService extends ConsoleLogger implements OnApplicationShutdow
   }
 
   debug(message: string, context?: string) {
-    message = `${this.app} ${message}`;
+    message = `${message}`;
     try {
       super.debug(message, context);
       Sentry.addBreadcrumb({
         message,
         level: Sentry.Severity.Debug,
         data: {
-          context
-        }
+          context,
+        },
       });
     } catch (err) {}
   }
 
   verbose(message: string, context?: string) {
-    message = `${this.app} ${message}`;
+    message = `${message}`;
     try {
       super.verbose(message, context);
       Sentry.addBreadcrumb({
         message,
         level: Sentry.Severity.Log,
         data: {
-          context
-        }
+          context,
+        },
       });
     } catch (err) {}
   }
