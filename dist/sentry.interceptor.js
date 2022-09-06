@@ -9,6 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.SentryInterceptor = void 0;
 const common_1 = require("@nestjs/common");
 const operators_1 = require("rxjs/operators");
 const node_1 = require("@sentry/node");
@@ -19,10 +20,10 @@ let SentryInterceptor = class SentryInterceptor {
         this.client = sentry_service_1.SentryService.SentryServiceInstance();
     }
     intercept(context, next) {
-        return next.handle().pipe(operators_1.tap(null, (exception) => {
+        return next.handle().pipe((0, operators_1.tap)(null, (exception) => {
             if (this.shouldReport(exception)) {
                 this.client.instance().withScope((scope) => {
-                    this.captureException(context, scope, exception);
+                    return this.captureException(context, scope, exception);
                 });
             }
         }));
@@ -73,7 +74,7 @@ let SentryInterceptor = class SentryInterceptor {
     }
 };
 SentryInterceptor = __decorate([
-    common_1.Injectable(),
+    (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [Object])
 ], SentryInterceptor);
 exports.SentryInterceptor = SentryInterceptor;

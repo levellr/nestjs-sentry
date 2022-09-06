@@ -33,6 +33,7 @@ var __rest = (this && this.__rest) || function (s, e) {
 };
 var SentryService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.SentryService = void 0;
 const common_1 = require("@nestjs/common");
 const Sentry = require("@sentry/node");
 const sentry_constants_1 = require("./sentry.constants");
@@ -72,7 +73,7 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
             super.log(message, context);
             Sentry.addBreadcrumb({
                 message,
-                level: Sentry.Severity.Log,
+                level: 'log',
                 data: {
                     context,
                 },
@@ -84,7 +85,7 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
         message = `${message}`;
         try {
             super.error(message, trace, context);
-            Sentry.captureMessage(message, Sentry.Severity.Error);
+            Sentry.captureMessage(message, 'error');
         }
         catch (err) { }
     }
@@ -92,7 +93,7 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
         message = `${message}`;
         try {
             super.warn(message, context);
-            Sentry.captureMessage(message, Sentry.Severity.Warning);
+            Sentry.captureMessage(message, 'warning');
         }
         catch (err) { }
     }
@@ -102,7 +103,7 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
             super.debug(message, context);
             Sentry.addBreadcrumb({
                 message,
-                level: Sentry.Severity.Debug,
+                level: 'debug',
                 data: {
                     context,
                 },
@@ -110,13 +111,13 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
         }
         catch (err) { }
     }
-    verbose(message, context) {
+    verbose(message, context, asBreadcrumb) {
         message = `${message}`;
         try {
             super.verbose(message, context);
             Sentry.addBreadcrumb({
                 message,
-                level: Sentry.Severity.Log,
+                level: 'info',
                 data: {
                     context,
                 },
@@ -137,8 +138,8 @@ let SentryService = SentryService_1 = class SentryService extends common_1.Conso
     }
 };
 SentryService = SentryService_1 = __decorate([
-    common_1.Injectable(),
-    __param(0, common_1.Inject(sentry_constants_1.SENTRY_MODULE_OPTIONS)),
+    (0, common_1.Injectable)(),
+    __param(0, (0, common_1.Inject)(sentry_constants_1.SENTRY_MODULE_OPTIONS)),
     __metadata("design:paramtypes", [Object])
 ], SentryService);
 exports.SentryService = SentryService;

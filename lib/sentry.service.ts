@@ -1,8 +1,7 @@
 import { Inject, Injectable, ConsoleLogger } from '@nestjs/common';
-import { Options, Client } from '@sentry/types';
-import * as Sentry from '@sentry/node';
 import { OnApplicationShutdown } from '@nestjs/common';
-
+import { ClientOptions, Client } from '@sentry/types';
+import * as Sentry from '@sentry/node';
 import { SENTRY_MODULE_OPTIONS } from './sentry.constants';
 import { SentryModuleOptions } from './sentry.interfaces';
 
@@ -34,8 +33,8 @@ export class SentryService
             } else {
               (
                 Sentry.getCurrentHub().getClient<
-                  Client<Options>
-                >() as Client<Options>
+                  Client<ClientOptions>
+                >() as Client<ClientOptions>
               ).captureException(err);
               process.exit(1);
             }
@@ -60,7 +59,7 @@ export class SentryService
       super.log(message, context);
       Sentry.addBreadcrumb({
         message,
-        level: Sentry.Severity.Log,
+        level: 'log',
         data: {
           context,
         },
@@ -72,7 +71,7 @@ export class SentryService
     message = `${message}`;
     try {
       super.error(message, trace, context);
-      Sentry.captureMessage(message, Sentry.Severity.Error);
+      Sentry.captureMessage(message, 'error');
     } catch (err) {}
   }
 
@@ -80,7 +79,7 @@ export class SentryService
     message = `${message}`;
     try {
       super.warn(message, context);
-      Sentry.captureMessage(message, Sentry.Severity.Warning);
+      Sentry.captureMessage(message, 'warning');
     } catch (err) {}
   }
 
@@ -90,7 +89,7 @@ export class SentryService
       super.debug(message, context);
       Sentry.addBreadcrumb({
         message,
-        level: Sentry.Severity.Debug,
+        level: 'debug',
         data: {
           context,
         },
@@ -98,13 +97,13 @@ export class SentryService
     } catch (err) {}
   }
 
-  verbose(message: string, context?: string) {
+  verbose(message: string, context?: string, asBreadcrumb?: boolean) {
     message = `${message}`;
     try {
       super.verbose(message, context);
       Sentry.addBreadcrumb({
         message,
-        level: Sentry.Severity.Log,
+        level: 'info',
         data: {
           context,
         },
