@@ -4,115 +4,49 @@ import {
   ExecutionContext,
   HttpException,
   Injectable,
-  NestInterceptor
+  NestInterceptor,
 } from '@nestjs/common';
-import { 
+import {
   HttpArgumentsHost,
   WsArgumentsHost,
   RpcArgumentsHost,
-  ContextType
+  ContextType,
+  Scope as NestScope,
 } from '@nestjs/common/interfaces';
 // Rxjs imports
-import { Observable } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { catchError, finalize, Observable, throwError } from 'rxjs';
 // Sentry imports
-import { Scope } from '@sentry/hub';
-import { Handlers } from '@sentry/node';
+import { Handlers, Scope } from '@sentry/node';
 
 import { SentryService } from './sentry.service';
-import { SentryInterceptorOptions, SentryInterceptorOptionsFilter } from './sentry.interfaces';
+import {
+  SentryInterceptorOptions,
+  SentryInterceptorOptionsFilter,
+} from './sentry.interfaces';
+import { SentryTransactionService } from './sentry-transaction.service';
+import { captureException } from '@sentry/node';
 
-
-@Injectable()
+@Injectable({ scope: NestScope.REQUEST })
 export class SentryInterceptor implements NestInterceptor {
-
-  protected readonly client: SentryService = SentryService.SentryServiceInstance()
-  constructor(
-    private readonly options?: SentryInterceptorOptions
-  ) {}
+  protected readonly client: SentryService =
+    SentryService.SentryServiceInstance();
+  constructor(private sentryService: SentryTransactionService) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    // first param would be for events, second is for errors
+    // start a child span for performance tracing
+    const span = this.sentryService.startChild({ op: `route handler` });
+
     return next.handle().pipe(
-      tap(null, (exception : HttpException) => {
-        if(this.shouldReport(exception)) {
-          this.client.instance().withScope((scope) => {
-            return this.captureException(context, scope, exception);
-          })
-        }
-      })
-    );
-  }
-
-  protected captureException(context: ExecutionContext, scope: Scope, exception: HttpException) {
-    switch (context.getType<ContextType>()) {
-      case 'http':
-        return this.captureHttpException(
-          scope, 
-          context.switchToHttp(), 
-          exception
-        );
-      case 'rpc':
-        return this.captureRpcException(
-          scope,
-          context.switchToRpc(),
-          exception,
-        );
-      case 'ws':
-        return this.captureWsException(
-          scope,
-          context.switchToWs(),
-          exception,
-        );
-    }
-  }
-
-  private captureHttpException(scope: Scope, http: HttpArgumentsHost, exception: HttpException): void {
-    const data = Handlers.parseRequest(<any>{},http.getRequest(), this.options);
-
-    scope.setExtra('req', data.request);
-    
-    if (data.extra) scope.setExtras(data.extra);
-    if (data.user) scope.setUser(data.user);
-
-    this.client.instance().captureException(exception);
-  }
-
-  private captureRpcException(
-    scope: Scope,
-    rpc: RpcArgumentsHost,
-    exception: any,
-  ): void {
-    scope.setExtra('rpc_data', rpc.getData());
-
-    this.client.instance().captureException(exception);
-  }
-
-  private captureWsException(
-    scope: Scope,
-    ws: WsArgumentsHost,
-    exception: any,
-  ): void {
-    scope.setExtra('ws_client', ws.getClient());
-    scope.setExtra('ws_data', ws.getData());
-
-    this.client.instance().captureException(exception);
-  }
-
-  private shouldReport(exception: any) {
-    if (this.options && !this.options.filters) return true;
-
-    // If all filters pass, then we do not report
-    if (this.options) {
-      const opts: SentryInterceptorOptions = this.options as {}
-      if (opts.filters) {
-        let filters: SentryInterceptorOptionsFilter[] = opts.filters
-        return filters.every(({ type, filter }) => {
-          return !(exception instanceof type && (!filter || filter(exception)));
+      catchError((error) => {
+        this.client.instance().withScope((scope) => {
+          captureException(error, this.sentryService.span?.getTraceContext());
         });
-      }
-    } else {
-      return true;
-    }
+        return throwError(() => error);
+      }),
+      finalize(() => {
+        span?.finish();
+        this.sentryService.span?.finish();
+      }),
+    );
   }
 }

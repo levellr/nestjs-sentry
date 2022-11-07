@@ -10,6 +10,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SentryModule = void 0;
 const common_1 = require("@nestjs/common");
 const sentry_core_module_1 = require("./sentry-core.module");
+const sentry_transaction_service_1 = require("./sentry-transaction.service");
 let SentryModule = SentryModule_1 = class SentryModule {
     static forRoot(options) {
         return {
@@ -25,7 +26,7 @@ let SentryModule = SentryModule_1 = class SentryModule {
     }
 };
 SentryModule = SentryModule_1 = __decorate([
-    (0, common_1.Module)({})
+    (0, common_1.Module)({ providers: [sentry_transaction_service_1.SentryTransactionService] })
 ], SentryModule);
 exports.SentryModule = SentryModule;
 //# sourceMappingURL=sentry.module.js.map

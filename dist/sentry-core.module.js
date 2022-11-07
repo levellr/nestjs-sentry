@@ -21,13 +21,24 @@ const common_1 = require("@nestjs/common");
 const sentry_constants_1 = require("./sentry.constants");
 const sentry_service_1 = require("./sentry.service");
 const sentry_providers_1 = require("./sentry.providers");
+const core_1 = require("@nestjs/core");
+const sentry_interceptor_1 = require("./sentry.interceptor");
+const sentry_transaction_service_1 = require("./sentry-transaction.service");
 let SentryCoreModule = SentryCoreModule_1 = class SentryCoreModule {
     static forRoot(options) {
         const provider = (0, sentry_providers_1.createSentryProviders)(options);
         return {
             exports: [provider, sentry_service_1.SentryService],
             module: SentryCoreModule_1,
-            providers: [provider, sentry_service_1.SentryService],
+            providers: [
+                provider,
+                sentry_service_1.SentryService,
+                sentry_transaction_service_1.SentryTransactionService,
+                {
+                    provide: core_1.APP_INTERCEPTOR,
+                    useClass: sentry_interceptor_1.SentryInterceptor,
+                },
+            ],
         };
     }
     static forRootAsync(options) {
@@ -44,6 +55,11 @@ let SentryCoreModule = SentryCoreModule_1 = class SentryCoreModule {
                 ...this.createAsyncProviders(options),
                 provider,
                 sentry_service_1.SentryService,
+                sentry_transaction_service_1.SentryTransactionService,
+                {
+                    provide: core_1.APP_INTERCEPTOR,
+                    useClass: sentry_interceptor_1.SentryInterceptor,
+                },
             ],
         };
     }

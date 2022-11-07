@@ -1,16 +1,10 @@
-import { CallHandler, ExecutionContext, HttpException, NestInterceptor } from '@nestjs/common';
+import { CallHandler, ExecutionContext, NestInterceptor } from '@nestjs/common';
 import { Observable } from 'rxjs';
-import { Scope } from '@sentry/hub';
 import { SentryService } from './sentry.service';
-import { SentryInterceptorOptions } from './sentry.interfaces';
+import { SentryTransactionService } from './sentry-transaction.service';
 export declare class SentryInterceptor implements NestInterceptor {
-    private readonly options?;
+    private sentryService;
     protected readonly client: SentryService;
-    constructor(options?: SentryInterceptorOptions | undefined);
+    constructor(sentryService: SentryTransactionService);
     intercept(context: ExecutionContext, next: CallHandler): Observable<any>;
-    protected captureException(context: ExecutionContext, scope: Scope, exception: HttpException): void;
-    private captureHttpException;
-    private captureRpcException;
-    private captureWsException;
-    private shouldReport;
 }

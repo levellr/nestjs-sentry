@@ -1,8 +1,12 @@
 import { Module, DynamicModule } from '@nestjs/common';
 import { SentryCoreModule } from './sentry-core.module';
-import { SentryModuleOptions, SentryModuleAsyncOptions } from './sentry.interfaces';
+import { SentryTransactionService } from './sentry-transaction.service';
+import {
+  SentryModuleOptions,
+  SentryModuleAsyncOptions,
+} from './sentry.interfaces';
 
-@Module({})
+@Module({ providers: [SentryTransactionService] })
 export class SentryModule {
   public static forRoot(options: SentryModuleOptions): DynamicModule {
     return {

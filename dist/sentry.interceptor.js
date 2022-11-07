@@ -11,71 +11,34 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.SentryInterceptor = void 0;
 const common_1 = require("@nestjs/common");
-const operators_1 = require("rxjs/operators");
-const node_1 = require("@sentry/node");
+const interfaces_1 = require("@nestjs/common/interfaces");
+const rxjs_1 = require("rxjs");
 const sentry_service_1 = require("./sentry.service");
+const sentry_transaction_service_1 = require("./sentry-transaction.service");
+const node_1 = require("@sentry/node");
 let SentryInterceptor = class SentryInterceptor {
-    constructor(options) {
-        this.options = options;
+    constructor(sentryService) {
+        this.sentryService = sentryService;
         this.client = sentry_service_1.SentryService.SentryServiceInstance();
     }
     intercept(context, next) {
-        return next.handle().pipe((0, operators_1.tap)(null, (exception) => {
-            if (this.shouldReport(exception)) {
-                this.client.instance().withScope((scope) => {
-                    return this.captureException(context, scope, exception);
-                });
-            }
+        const span = this.sentryService.startChild({ op: `route handler` });
+        return next.handle().pipe((0, rxjs_1.catchError)((error) => {
+            this.client.instance().withScope((scope) => {
+                var _a;
+                (0, node_1.captureException)(error, (_a = this.sentryService.span) === null || _a === void 0 ? void 0 : _a.getTraceContext());
+            });
+            return (0, rxjs_1.throwError)(() => error);
+        }), (0, rxjs_1.finalize)(() => {
+            var _a;
+            span === null || span === void 0 ? void 0 : span.finish();
+            (_a = this.sentryService.span) === null || _a === void 0 ? void 0 : _a.finish();
         }));
-    }
-    captureException(context, scope, exception) {
-        switch (context.getType()) {
-            case 'http':
-                return this.captureHttpException(scope, context.switchToHttp(), exception);
-            case 'rpc':
-                return this.captureRpcException(scope, context.switchToRpc(), exception);
-            case 'ws':
-                return this.captureWsException(scope, context.switchToWs(), exception);
-        }
-    }
-    captureHttpException(scope, http, exception) {
-        const data = node_1.Handlers.parseRequest({}, http.getRequest(), this.options);
-        scope.setExtra('req', data.request);
-        if (data.extra)
-            scope.setExtras(data.extra);
-        if (data.user)
-            scope.setUser(data.user);
-        this.client.instance().captureException(exception);
-    }
-    captureRpcException(scope, rpc, exception) {
-        scope.setExtra('rpc_data', rpc.getData());
-        this.client.instance().captureException(exception);
-    }
-    captureWsException(scope, ws, exception) {
-        scope.setExtra('ws_client', ws.getClient());
-        scope.setExtra('ws_data', ws.getData());
-        this.client.instance().captureException(exception);
-    }
-    shouldReport(exception) {
-        if (this.options && !this.options.filters)
-            return true;
-        if (this.options) {
-            const opts = this.options;
-            if (opts.filters) {
-                let filters = opts.filters;
-                return filters.every(({ type, filter }) => {
-                    return !(exception instanceof type && (!filter || filter(exception)));
-                });
-            }
-        }
-        else {
-            return true;
-        }
     }
 };
 SentryInterceptor = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [Object])
+    (0, common_1.Injectable)({ scope: interfaces_1.Scope.REQUEST }),
+    __metadata("design:paramtypes", [sentry_transaction_service_1.SentryTransactionService])
 ], SentryInterceptor);
 exports.SentryInterceptor = SentryInterceptor;
 //# sourceMappingURL=sentry.interceptor.js.map
