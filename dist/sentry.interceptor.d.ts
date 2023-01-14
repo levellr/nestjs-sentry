@@ -7,4 +7,5 @@ export declare class SentryInterceptor implements NestInterceptor {
     protected readonly client: SentryService;
     constructor(sentryService: SentryTransactionService);
     intercept(context: ExecutionContext, next: CallHandler): Observable<any>;
+    private shouldReport;
 }

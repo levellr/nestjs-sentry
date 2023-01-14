@@ -24,16 +24,28 @@ let SentryInterceptor = class SentryInterceptor {
     intercept(context, next) {
         const span = this.sentryService.startChild({ op: `route handler` });
         return next.handle().pipe((0, rxjs_1.catchError)((error) => {
-            this.client.instance().withScope((scope) => {
-                var _a;
-                (0, node_1.captureException)(error, (_a = this.sentryService.span) === null || _a === void 0 ? void 0 : _a.getTraceContext());
-            });
+            if (this.shouldReport(error)) {
+                this.client.instance().withScope((scope) => {
+                    var _a;
+                    (0, node_1.captureException)(error, (_a = this.sentryService.span) === null || _a === void 0 ? void 0 : _a.getTraceContext());
+                });
+            }
             return (0, rxjs_1.throwError)(() => error);
         }), (0, rxjs_1.finalize)(() => {
             var _a;
             span === null || span === void 0 ? void 0 : span.finish();
             (_a = this.sentryService.span) === null || _a === void 0 ? void 0 : _a.finish();
         }));
+    }
+    shouldReport(exception) {
+        const isHttpException = 'response' in exception &&
+            typeof exception['response'] === 'object' &&
+            'statusCode' in exception['response'];
+        if (!isHttpException) {
+            return true;
+        }
+        const isServerError = exception['response']['statusCode'] >= 500;
+        return isServerError;
     }
 };
 SentryInterceptor = __decorate([

@@ -2,27 +2,13 @@
 import {
   CallHandler,
   ExecutionContext,
-  HttpException,
   Injectable,
   NestInterceptor,
 } from '@nestjs/common';
-import {
-  HttpArgumentsHost,
-  WsArgumentsHost,
-  RpcArgumentsHost,
-  ContextType,
-  Scope as NestScope,
-} from '@nestjs/common/interfaces';
-// Rxjs imports
+import { Scope as NestScope } from '@nestjs/common/interfaces';
 import { catchError, finalize, Observable, throwError } from 'rxjs';
-// Sentry imports
-import { Handlers, Scope } from '@sentry/node';
 
 import { SentryService } from './sentry.service';
-import {
-  SentryInterceptorOptions,
-  SentryInterceptorOptionsFilter,
-} from './sentry.interfaces';
 import { SentryTransactionService } from './sentry-transaction.service';
 import { captureException } from '@sentry/node';
 
@@ -38,9 +24,11 @@ export class SentryInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       catchError((error) => {
-        this.client.instance().withScope((scope) => {
-          captureException(error, this.sentryService.span?.getTraceContext());
-        });
+        if (this.shouldReport(error)) {
+          this.client.instance().withScope((scope) => {
+            captureException(error, this.sentryService.span?.getTraceContext());
+          });
+        }
         return throwError(() => error);
       }),
       finalize(() => {
@@ -48,5 +36,19 @@ export class SentryInterceptor implements NestInterceptor {
         this.sentryService.span?.finish();
       }),
     );
+  }
+
+  private shouldReport(exception: any) {
+    const isHttpException =
+      'response' in exception &&
+      typeof exception['response'] === 'object' &&
+      'statusCode' in exception['response'];
+
+    if (!isHttpException) {
+      return true;
+    }
+
+    const isServerError = exception['response']['statusCode'] >= 500;
+    return isServerError;
   }
 }
